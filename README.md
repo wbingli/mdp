@@ -7,25 +7,13 @@ Unlike `gh markdown-preview` which blocks the terminal and spawns a new server p
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wbingli/mdp/main/install.sh | sh
-```
-
-This installs `mdp` to `~/.local/bin`. Set `MDP_INSTALL_DIR` to change the location:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/wbingli/mdp/main/install.sh | MDP_INSTALL_DIR=/usr/local/bin sh
-```
-
-### Other methods
-
-```bash
-# Go install
-go install github.com/wbingli/mdp@latest
-
-# Build from source
+# Build from source (installs to ~/.local/bin)
 git clone https://github.com/wbingli/mdp.git
 cd mdp
 make install
+
+# Or via go install
+go install github.com/wbingli/mdp@latest
 ```
 
 ## Usage
