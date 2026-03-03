@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/cobra"
 )
@@ -41,6 +42,9 @@ func runOpen(cmd *cobra.Command, args []string) error {
 	url := fmt.Sprintf("%s%s", serverURL(), filePath)
 	fmt.Println(url)
 
-	// Open in browser
-	return exec.Command("open", url).Run()
+	// Open in browser (macOS only)
+	if runtime.GOOS == "darwin" {
+		return exec.Command("open", url).Run()
+	}
+	return nil
 }

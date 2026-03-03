@@ -73,6 +73,12 @@ func stopServer() (int, error) {
 		return 0, nil
 	}
 
+	// Verify the process is actually an mdp server, not a reused PID
+	if !isServerHealthy() {
+		pidfile.Remove(pidPath())
+		return 0, nil
+	}
+
 	proc, err := os.FindProcess(pid)
 	if err != nil {
 		return 0, fmt.Errorf("cannot find process %d: %w", pid, err)

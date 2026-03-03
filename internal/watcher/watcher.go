@@ -58,7 +58,6 @@ func (h *Hub) loop() {
 				}
 				debounce[filePath] = time.AfterFunc(100*time.Millisecond, func() {
 					h.notify(filePath)
-					delete(debounce, filePath)
 				})
 			}
 		case err, ok := <-h.watcher.Errors:
@@ -72,10 +71,9 @@ func (h *Hub) loop() {
 
 func (h *Hub) notify(filePath string) {
 	h.mu.Lock()
-	subs := h.subscribers[filePath]
-	h.mu.Unlock()
+	defer h.mu.Unlock()
 
-	for _, ch := range subs {
+	for _, ch := range h.subscribers[filePath] {
 		select {
 		case ch <- struct{}{}:
 		default:
