@@ -18,6 +18,11 @@ func (s *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !s.Allowlist.IsAllowed(filePath) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)

@@ -45,6 +45,11 @@ func (s *Server) handleCatchAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if !s.Allowlist.IsAllowed(filePath) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	if !isMarkdown(filePath) {
 		http.ServeFile(w, r, filePath)
 		return

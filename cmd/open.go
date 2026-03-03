@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -39,6 +41,14 @@ func runOpen(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to start server: %w", err)
 		}
 	}
+
+	// Register the file on the server's allowlist
+	allowURL := fmt.Sprintf("%s/api/allow", serverURL())
+	resp, err := http.Post(allowURL, "text/plain", strings.NewReader(filePath))
+	if err != nil {
+		return fmt.Errorf("failed to register file: %w", err)
+	}
+	resp.Body.Close()
 
 	u := &url.URL{
 		Scheme: "http",
