@@ -53,6 +53,11 @@ fi
 
 chmod +x "$INSTALL_DIR/mdp"
 
+# Remove macOS quarantine attributes to prevent Gatekeeper from killing the binary
+if [ "$OS" = "darwin" ]; then
+  xattr -c "$INSTALL_DIR/mdp" 2>/dev/null || true
+fi
+
 echo "Installed mdp to ${INSTALL_DIR}/mdp"
 
 # Check if install dir is in PATH
