@@ -6,6 +6,7 @@ build:
 install: build
 	mkdir -p $(PREFIX)/bin
 	cp mdp $(PREFIX)/bin/mdp
+	@echo "Installed mdp to $(PREFIX)/bin/mdp"
 
 uninstall:
 	rm -f $(PREFIX)/bin/mdp
