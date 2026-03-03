@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,12 +40,16 @@ func runOpen(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	url := fmt.Sprintf("%s%s", serverURL(), filePath)
-	fmt.Println(url)
+	u := &url.URL{
+		Scheme: "http",
+		Host:   serverAddr(),
+		Path:   filePath,
+	}
+	fmt.Println(u.String())
 
 	// Open in browser (macOS only)
 	if runtime.GOOS == "darwin" {
-		return exec.Command("open", url).Run()
+		return exec.Command("open", u.String()).Run()
 	}
 	return nil
 }
