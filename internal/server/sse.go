@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/wbingli/mdp/internal/render"
 )
@@ -38,11 +39,24 @@ func (s *Server) handleSSE(w http.ResponseWriter, r *http.Request) {
 	ch := s.Watcher.Subscribe(filePath)
 	defer s.Watcher.Unsubscribe(filePath, ch)
 
+	// Heartbeat ensures the server detects client disconnection promptly.
+	// Without periodic writes, a disconnected client may not be detected
+	// until the next file-change event, causing the connection to linger
+	// and potentially blocking new requests on page refresh.
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
 	ctx := r.Context()
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case <-ticker.C:
+			// SSE comment line — ignored by the browser's EventSource API
+			if _, err := fmt.Fprintf(w, ": heartbeat\n\n"); err != nil {
+				return
+			}
+			flusher.Flush()
 		case _, ok := <-ch:
 			if !ok {
 				return

@@ -36,8 +36,9 @@ func New(addr string) *Server {
 	mux.HandleFunc("/", s.handleCatchAll)
 
 	s.srv = &http.Server{
-		Addr:    addr,
-		Handler: mux,
+		Addr:        addr,
+		Handler:     mux,
+		IdleTimeout: 60 * time.Second,
 	}
 	return s
 }
