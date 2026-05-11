@@ -43,12 +43,39 @@ func New(addr string) *Server {
 }
 
 func (s *Server) Start() error {
+	if err := requireLoopback(s.Addr); err != nil {
+		return err
+	}
 	ln, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		return fmt.Errorf("listen %s: %w", s.Addr, err)
 	}
 	log.Printf("Server listening on %s", s.Addr)
 	return s.srv.Serve(ln)
+}
+
+// requireLoopback returns an error unless every address that addr's host
+// resolves to is a loopback address. mdp serves arbitrary local files, so
+// it must never bind to an externally reachable interface.
+func requireLoopback(addr string) error {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("invalid addr %q: %w", addr, err)
+	}
+	if host == "" {
+		return fmt.Errorf("host must be a loopback address; empty host binds to all interfaces")
+	}
+	addrs, err := net.LookupHost(host)
+	if err != nil {
+		return fmt.Errorf("cannot resolve host %q: %w", host, err)
+	}
+	for _, a := range addrs {
+		ip := net.ParseIP(a)
+		if ip == nil || !ip.IsLoopback() {
+			return fmt.Errorf("host %q resolves to non-loopback address %s; mdp only binds to localhost", host, a)
+		}
+	}
+	return nil
 }
 
 func (s *Server) Shutdown() error {

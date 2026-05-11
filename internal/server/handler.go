@@ -45,17 +45,20 @@ func (s *Server) handleCatchAll(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if isMarkdown(filePath) {
+		// Markdown is always allowed on this loopback-only server.
+		// Register the path so referenced assets in the same directory resolve.
+		s.Allowlist.Allow(filePath)
+		s.renderMarkdown(w, r, filePath)
+		return
+	}
+
 	if !s.Allowlist.IsAllowed(filePath) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	if !isMarkdown(filePath) {
-		http.ServeFile(w, r, filePath)
-		return
-	}
-
-	s.renderMarkdown(w, r, filePath)
+	http.ServeFile(w, r, filePath)
 }
 
 func (s *Server) renderMarkdown(w http.ResponseWriter, r *http.Request, filePath string) {

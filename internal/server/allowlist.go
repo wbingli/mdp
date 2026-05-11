@@ -7,9 +7,9 @@ import (
 )
 
 // Allowlist is a thread-safe set of allowed file paths.
-// Markdown files must match exactly; non-markdown assets are allowed
-// if they reside in the same directory (or a subdirectory) of any
-// allowed markdown file.
+// Markdown files are always allowed (the server only binds to loopback).
+// Non-markdown assets are allowed if they reside in the same directory
+// (or a subdirectory) of any markdown file that has been served.
 type Allowlist struct {
 	mu    sync.RWMutex
 	paths map[string]struct{}
@@ -19,7 +19,8 @@ func NewAllowlist() *Allowlist {
 	return &Allowlist{paths: make(map[string]struct{})}
 }
 
-// Allow adds an absolute file path to the allowlist.
+// Allow adds an absolute file path to the allowlist. Used to register
+// markdown files so that assets in their directory become servable.
 func (a *Allowlist) Allow(path string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -27,10 +28,11 @@ func (a *Allowlist) Allow(path string) {
 }
 
 // IsAllowed reports whether path may be served.
-// Markdown files must be exactly on the list.
-// Non-markdown files are allowed when they sit under the directory
-// of any allowed markdown file.
 func (a *Allowlist) IsAllowed(path string) bool {
+	if isMarkdown(path) {
+		return true
+	}
+
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 
@@ -38,11 +40,7 @@ func (a *Allowlist) IsAllowed(path string) bool {
 		return true
 	}
 
-	if isMarkdown(path) {
-		return false
-	}
-
-	// Non-markdown asset: allow if it's under any allowed file's directory.
+	// Non-markdown asset: allow if it's under any registered file's directory.
 	for p := range a.paths {
 		dir := filepath.Dir(p) + string(filepath.Separator)
 		if strings.HasPrefix(path, dir) {
